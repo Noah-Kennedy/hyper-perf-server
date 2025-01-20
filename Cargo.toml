@@ -1,0 +1,12 @@
+[package]
+name = "hyper-perf-server"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+axum = "0.7.9"
+axum-server = { version = "0.7.1", features = ["tls-rustls-no-provider"] }
+clap = { version = "4.5.26", features = ["derive"] }
+tokio = { version = "1.42.0", features = ["rt-multi-thread", "macros"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
