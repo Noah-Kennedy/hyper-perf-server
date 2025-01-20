@@ -1,6 +1,7 @@
 use axum::body::Body;
+use axum::extract::ConnectInfo;
 use axum::http::header::CACHE_CONTROL;
-use axum::http::{HeaderMap, StatusCode};
+use axum::http::{HeaderMap, StatusCode, Version};
 use axum::routing::{get, post};
 use axum::Router;
 use axum_server::tls_rustls::RustlsConfig;
@@ -36,10 +37,12 @@ async fn main() {
 
     tracing::info!("listening on {}", addr);
 
-    tokio::spawn(axum_server::bind_rustls(addr, config).serve(app.into_make_service()))
-        .await
-        .unwrap()
-        .unwrap();
+    tokio::spawn(
+        axum_server::bind_rustls(addr, config).serve(app.into_make_service_with_connect_info::<SocketAddr>()),
+    )
+    .await
+    .unwrap()
+    .unwrap();
 }
 
 // feel free to scream into the void
@@ -56,7 +59,18 @@ async fn upload_void(body: Body) -> StatusCode {
     StatusCode::OK
 }
 
-async fn hello() -> (HeaderMap, &'static str) {
+#[axum::debug_handler]
+async fn hello(
+    connect_info: ConnectInfo<SocketAddr>,
+    version: Version,
+    headers: HeaderMap,
+) -> (HeaderMap, &'static str) {
+    tracing::info!(
+        headers = ?headers,
+        version = ?version,
+        addr = ?connect_info.0,
+        message="hello"
+    );
     let mut headers = HeaderMap::new();
 
     headers.insert("Content-Type", "text/plain".parse().unwrap());
