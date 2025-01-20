@@ -5,6 +5,7 @@ use axum::routing::{get, post};
 use axum::Router;
 use axum_server::tls_rustls::RustlsConfig;
 use clap::Parser;
+use futures_util::StreamExt;
 use std::{net::SocketAddr, path::PathBuf};
 
 #[derive(Parser, Debug)]
