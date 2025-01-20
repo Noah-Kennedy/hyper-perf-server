@@ -32,7 +32,7 @@ async fn main() {
         .route("/void", post(upload_void));
 
     // run https server
-    let addr = SocketAddr::from(([0, 0, 0, 0], 80));
+    let addr = SocketAddr::from(([0, 0, 0, 0], 443));
 
     tracing::info!("listening on {}", addr);
 
