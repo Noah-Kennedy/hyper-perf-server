@@ -38,7 +38,8 @@ async fn main() {
     tracing::info!("listening on {}", addr);
 
     tokio::spawn(
-        axum_server::bind_rustls(addr, config).serve(app.into_make_service_with_connect_info::<SocketAddr>()),
+        axum_server::bind_rustls(addr, config)
+            .serve(app.into_make_service_with_connect_info::<SocketAddr>()),
     )
     .await
     .unwrap()
@@ -46,15 +47,42 @@ async fn main() {
 }
 
 // feel free to scream into the void
-async fn upload_void(body: Body) -> StatusCode {
+async fn upload_void(
+    connect_info: ConnectInfo<SocketAddr>,
+    version: Version,
+    headers: HeaderMap,
+    body: Body,
+) -> StatusCode {
     let mut stream = body.into_data_stream();
 
+    let span = tracing::info_span!(
+        "void",
+        headers = ?headers,
+        version = ?version,
+        addr = ?connect_info.0,
+    );
+
+    let _guard = span.enter();
+
+    tracing::info!(message = "Started void upload");
+
+    let mut len = 0;
+
     while let Some(frame) = stream.next().await {
-        if let Err(err) = frame {
-            tracing::error!("failed to read frame: {}", err);
-            return StatusCode::INTERNAL_SERVER_ERROR;
+        match frame {
+            Err(err) => {
+                tracing::error!("failed to read frame: {}", err);
+                return StatusCode::INTERNAL_SERVER_ERROR;
+            }
+            Ok(f) => {
+                len += f.len();
+
+                tracing::info!(len = len, message = "Void new frame");
+            }
         }
     }
+
+    tracing::info!(len = len, message = "Finished void upload");
 
     StatusCode::OK
 }
